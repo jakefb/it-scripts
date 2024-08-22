@@ -1,6 +1,6 @@
 # it-scripts
 
-A collection of useful utility scripts for IT Support and scripts to deploy to Macs via JAMF. Please use these scripts at your own risk as they may contain bugs. PRs and issues are welcome.
+A collection of useful utility scripts for IT support and scripts to deploy to Macs via JAMF. Please use these scripts at your own risk as they may contain bugs. PRs and issues are welcome.
 
 ## Mac rsync backup script
 
@@ -21,7 +21,7 @@ This script is intended for backing up a Mac user's home folder to an external d
 
 Run with:
 
-sh```
+```sh
 ./backups/rsync_backup.sh [source path] [destination path] [optional: exclude file]
 ```
 
@@ -43,7 +43,7 @@ This script is intended for installing homebrew as a dedicated user, as a workar
 
 Either deploy the script to JAMF, or run the script as root:
 
-sh```
+```sh
 ./jamf/install_homebrew_as_dedicated_user
 ```
 
@@ -51,6 +51,6 @@ sh```
 
 Either deploy the script to JAMF, or run the script as root:
 
-sh```
+```sh
 ./jamf/uninstall_homebrew_as_dedicated_user
 ```
