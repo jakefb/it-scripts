@@ -52,7 +52,7 @@ fi
 
 TEMP_FILE="/tmp/sudoers.tmp"
 
-if grep -E "^${HOMEBREW_USERNAME}[ ]+ALL = \(ALL\) NOPASSWD:ALL$" /etc/sudoers; then
+if grep -E "^$HOMEBREW_USERNAME ALL = \(ALL\) NOPASSWD:ALL$" /etc/sudoers; then
   echo "Removing the line for the homebrew user from the sudoers file."
 
   if ! visudo -c -f /etc/sudoers; then
@@ -60,7 +60,7 @@ if grep -E "^${HOMEBREW_USERNAME}[ ]+ALL = \(ALL\) NOPASSWD:ALL$" /etc/sudoers; 
     exit 1
   fi
 
-  sed "/^${HOMEBREW_USERNAME} ALL = (ALL) NOPASSWD:ALL$/d" /etc/sudoers > "$TEMP_FILE"
+  sed "/^$HOMEBREW_USERNAME ALL = (ALL) NOPASSWD:ALL$/d" /etc/sudoers > "$TEMP_FILE"
 
   if ! visudo -c -f "$TEMP_FILE"; then
     echo "Syntax error detected in the modified sudoers tmp file. Deleting $TEMP_FILE. Aborting." >&2
