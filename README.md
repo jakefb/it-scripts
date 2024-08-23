@@ -36,6 +36,7 @@ This script is intended for installing homebrew as a dedicated user, as a workar
 1. The installer script will install homebrew to `/opt/homebrew` as the `homebrew` user. The `homebrew` user will be the owner of this directory.
 1. The installer script modifies the permissions of `/opt/homebrew/bin/brew` so it can only be executed by the user `homebrew`, as a step to enforce users not to run the homebrew `brew` executable as users other than the `homebrew` user.
 1. The installer script creates a bash script at `/usr/local/bin/brew`, and because `/usr/local/bin` is part of users' PATHs by default, typing `brew` triggers this script. This script updates the user's shell profile on the initial run, and executes the homebrew `brew` as the homebrew user on every run. The changes that are made to the user's shell profile on the initial run are: it adds `/opt/homebrew/bin:/opt/homebrew/sbin` to the PATH and aliases `brew` to `/usr/local/bin/brew` (which is the script). This alias ensures that the script runs instead of the homebrew `brew` executable, which would otherwise have precedence due to the updated PATH.
+1. The script was created to be run as root, because it was intended to be run deployed with JAMF, which runs scripts as root. If you don't want to run the script as root, you would have to adapt it accordingly.
 
 **Running the installer script**
 

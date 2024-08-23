@@ -1,6 +1,17 @@
 #!/bin/bash
 
-set -u
+set -eu
+
+SCRIPT_NAME="uninstall_homebrew_as_dedicated_user.sh"
+
+handle_error() {
+  local EXIT_CODE=$?
+  local LINE_NUMBER=$1
+  echo "An error occurred on line $LINE_NUMBER of $SCRIPT_NAME"
+  exit $EXIT_CODE
+}
+
+trap 'handle_error $LINENO' ERR
 
 if (( EUID != 0 )); then
   echo "This script must be run as root." >&2
