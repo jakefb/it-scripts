@@ -18,16 +18,14 @@ if (( EUID != 0 )); then
     exit 2
   fi
 fi
-if [[ -z "$1" || -z "$2" ]]; then
+SOURCE_DIR="${1:-}"
+SOURCE_DIR_TRAILING_SLASH="${SOURCE_DIR%/}/"
+DEST_DIR="${2:-}"
+EXCLUDE_FILE="${3:-}"
+if [[ -z "$SOURCE_DIR" || -z "$DEST_DIR" ]]; then
   echo "Usage: $0 [source path] [destination path] [optional: exclude file]"
   exit 2
 fi
-set +u
-SOURCE_DIR="$1"
-SOURCE_DIR_TRAILING_SLASH="${SOURCE_DIR%/}/"
-DEST_DIR="$2"
-EXCLUDE_FILE="$3"
-set -u
 function dest_exists_ask_to_continue() {
   read -p $'\e[34mDestination directory already exists; do you want to resume an interrupted rsync copy? (y/n) \e[0m' SHOULD_APPEND
   if [[ "$SHOULD_APPEND" == "y" ]]; then
