@@ -185,30 +185,43 @@ TARGET_PATH="$HOMEBREW_PATH/bin:$HOMEBREW_PATH/sbin"
 
 SHELL_NAME=$(basename "$SHELL")
 
-if [[ "$SHELL_NAME" == "bash" ]]; then
-  SHELL_PROFILE_PATH="$HOME/.bash_profile"
-elif [[ "$SHELL_NAME" == "zsh" ]]; then
-  SHELL_PROFILE_PATH="$HOME/.zprofile"
+if [[ "$SHELL_NAME" == "bash" || "$SHELL_NAME" == "zsh" ]]; then
+  if [[ "$SHELL_NAME" == "bash" ]]; then
+    SHELL_PROFILE_PATH="$HOME/.bash_profile"
+  else
+    SHELL_PROFILE_PATH="$HOME/.zprofile"
+  fi
+
+  if grep -q "export PATH=\"$TARGET_PATH:\$PATH\"" "$SHELL_PROFILE_PATH"; then
+    PATH_EXISTS="1"
+  else
+    PATH_EXISTS="0"
+  fi
+
+  if grep -q "alias brew=\"$HOMEBREW_SCRIPT\"" "$SHELL_PROFILE_PATH"; then
+    ALIAS_EXISTS="1"
+  else
+    ALIAS_EXISTS="0"
+  fi
+
+  if [[ "$PATH_EXISTS" == "0" ]]; then
+    echo "export PATH=\"$TARGET_PATH:\$PATH\"" >> "$SHELL_PROFILE_PATH"
+    echo "Added \`export PATH=\"$TARGET_PATH:\$PATH\"\` to $SHELL_PROFILE_PATH"
+  fi
+
+  if [[ "$ALIAS_EXISTS" == "0" ]]; then
+    echo "alias brew=\"$HOMEBREW_SCRIPT\"" >> "$SHELL_PROFILE_PATH"
+    echo "Added \`alias brew=\"$HOMEBREW_SCRIPT\"\` to $SHELL_PROFILE_PATH"
+  fi
+
+  if [[ "$PATH_EXISTS" == "0" || "$ALIAS_EXISTS" == "0" ]]; then
+    echo "Please run the following command to source your shell profile:"
+    echo "source $SHELL_PROFILE_PATH"
+  fi
 else
   echo "Unsupported shell. Please manually add the following lines to your shell profile:"
   echo "export PATH=\"$TARGET_PATH:\$PATH\""
   echo "alias brew=\"$HOMEBREW_SCRIPT\""
-  exit 1
-fi
-
-if grep -q "export PATH=\"$TARGET_PATH:\$PATH\"" "$SHELL_PROFILE_PATH" && grep -q "alias brew=\"$HOMEBREW_SCRIPT\"" "$SHELL_PROFILE_PATH"; then
-  PATH_AND_ALIAS_EXISTS="1"
-else
-  PATH_AND_ALIAS_EXISTS="0"
-fi
-
-if [[ "$PATH_AND_ALIAS_EXISTS" == "0" ]]; then
-  echo "export PATH=\"$TARGET_PATH:\$PATH\"" >> "$SHELL_PROFILE_PATH"
-  echo "Added \`export PATH=\"$TARGET_PATH:\$PATH\"\` to $SHELL_PROFILE_PATH"
-  echo "alias brew=\"$HOMEBREW_SCRIPT\"" >> "$SHELL_PROFILE_PATH"
-  echo "Added \`alias brew=\"$HOMEBREW_SCRIPT\"\` to $SHELL_PROFILE_PATH"
-  echo "Please run the following command to source your shell profile:"
-  echo "source $SHELL_PROFILE_PATH"
 fi
 
 sudo -Hu homebrew "$HOMEBREW_PATH"/bin/brew "$@"' > "$HOMEBREW_SCRIPT"
