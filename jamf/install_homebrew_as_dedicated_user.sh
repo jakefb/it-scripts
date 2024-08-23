@@ -2,10 +2,10 @@
 
 set -u
 
-VERSION="1"
+VERSION=1
 
-if [ "$EUID" -ne 0 ]; then
-  echo "This script must be run as root."
+if (( EUID != 0 )); then
+  echo "This script must be run as root." >&2
   exit 1
 fi
 
@@ -56,13 +56,6 @@ chomp() {
   printf "%s" "${1/"$'\n'"/}"
 }
 
-major_minor() {
-  echo "${1%%.*}.$(
-    X="${1#*.}"
-    echo "${X%%.*}"
-  )"
-}
-
 MACOS_VERSION="$(major_minor "$(/usr/bin/sw_vers -productVersion)")"
 
 echo "macos version: $MACOS_VERSION"
@@ -99,8 +92,17 @@ if should_install_command_line_tools && version_ge "${MACOS_VERSION}" "10.13"; t
     echo "Installing $CLT_LABEL"
     /usr/sbin/softwareupdate -i "$CLT_LABEL"
     /usr/bin/xcode-select --switch /Library/Developer/CommandLineTools
+    if (( $? == 0 )); then
+      echo "Command Line Tools installed successfully."
+    else
+      /bin/rm -f $CLT_PLACEHOLDER
+      echo "Failed to install or switch Command Line Tools. Exiting." >&2
+      exit 1
+    fi
   fi
-  /bin/rm -f $CLT_PLACEHOLDER
+  /bin/rm -f "$CLT_PLACEHOLDER"
+  echo "No Command Line Tools found for installation. Exiting." >&2
+  exit 1
 fi
 ### END adapted code
 
@@ -108,23 +110,16 @@ HOMEBREW_USERNAME="homebrew"
 HOMEBREW_PATH="/opt/homebrew"
 HOMEBREW_SCRIPT="/usr/local/bin/brew"
 
-if [ -d "$HOMEBREW_PATH" ]; then
+if [[ -d "$HOMEBREW_PATH" ]]; then
 	HOMEBREW_DIR_OWNER=$(stat -f '%Su' "$HOMEBREW_PATH")
 
-  if [ "$HOMEBREW_DIR_OWNER" == "$HOMEBREW_USERNAME" ]; then
+  if [[ "$HOMEBREW_DIR_OWNER" == "$HOMEBREW_USERNAME" ]]; then
     echo "$HOMEBREW_PATH is owned by $HOMEBREW_USERNAME. This means it was previously installed correctly. Exiting."
     exit 0
  	else
-    echo "$HOMEBREW_PATH exists but is owned by $HOMEBREW_DIR_OWNER. This indicates that homebrew was installed by the user. Exiting."
+    echo "$HOMEBREW_PATH exists but is owned by $HOMEBREW_DIR_OWNER. This indicates that homebrew was installed by the user. Exiting." >&2
     exit 1
   fi
-fi
-
-if [ $? -eq 0 ]; then
-  echo "Xcode command line tools were installed successfully."
-else
-  echo "Xcode command line tools installation failed."
-  exit 1
 fi
 
 HOMEBREW_USERS_SHELL="zsh"
@@ -163,9 +158,9 @@ su - "$HOMEBREW_USERNAME" <<EOF
   chmod -R go-w "$HOMEBREW_PATH/share/zsh"
 
   # Add a version number to the installation, can be used for patches later
-  echo "$VERSION" >> "$HOMEBREW_PATH/_installer_version"
+  echo $VERSION >> "$HOMEBREW_PATH/_installer_version"
 
-  if [ -n ~/"$HOMEBREW_USERS_SHELL_PROFILE_FILENAME" ]; then
+  if [[ -n ~/"$HOMEBREW_USERS_SHELL_PROFILE_FILENAME" ]]; then
  	  echo 'eval "$($HOMEBREW_PATH/bin/brew shellenv)"' >> ~/"$HOMEBREW_USERS_SHELL_PROFILE_FILENAME"
   fi
 EOF
@@ -174,7 +169,7 @@ echo '#!/bin/bash
 set -u
 
 if [[ "$(whoami)" == "root" || "$(whoami)" == "homebrew" ]]; then
-  echo "This script cannot be run as root or homebrew."
+  echo "This script cannot be run as the user $(whoami)." >&2
   exit 1
 fi
 
@@ -193,30 +188,30 @@ if [[ "$SHELL_NAME" == "bash" || "$SHELL_NAME" == "zsh" ]]; then
   fi
 
   if grep -q "export PATH=\"$TARGET_PATH:\$PATH\"" "$SHELL_PROFILE_PATH"; then
-    PATH_EXISTS="1"
+    PATH_EXISTS=1
   else
-    PATH_EXISTS="0"
+    PATH_EXISTS=0
   fi
 
   if grep -q "alias brew=\"$HOMEBREW_SCRIPT\"" "$SHELL_PROFILE_PATH"; then
-    ALIAS_EXISTS="1"
+    ALIAS_EXISTS=1
   else
-    ALIAS_EXISTS="0"
+    ALIAS_EXISTS=0
   fi
 
-  if [[ "$PATH_EXISTS" == "0" ]]; then
+  if (( PATH_EXISTS == 0 )); then
     echo "export PATH=\"$TARGET_PATH:\$PATH\"" >> "$SHELL_PROFILE_PATH"
     echo "Added \`export PATH=\"$TARGET_PATH:\$PATH\"\` to $SHELL_PROFILE_PATH"
   fi
 
-  if [[ "$ALIAS_EXISTS" == "0" ]]; then
+  if (( ALIAS_EXISTS == 0 )); then
     echo "alias brew=\"$HOMEBREW_SCRIPT\"" >> "$SHELL_PROFILE_PATH"
     echo "Added \`alias brew=\"$HOMEBREW_SCRIPT\"\` to $SHELL_PROFILE_PATH"
   fi
 
-  if [[ "$PATH_EXISTS" == "0" || "$ALIAS_EXISTS" == "0" ]]; then
+  if [[ $PATH_EXISTS -eq 0 || $ALIAS_EXISTS -eq 0 ]]; then
     echo "Please run the following command to source your shell profile:"
-    echo "source $SHELL_PROFILE_PATH"
+    echo "source \"$SHELL_PROFILE_PATH\""
   fi
 else
   echo "Unsupported shell. Please manually add the following lines to your shell profile:"

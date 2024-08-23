@@ -23,7 +23,7 @@ This script is intended for backing up a Mac user's home folder to an external d
 ./backups/rsync_backup.sh [source path] [destination path] [optional: exclude file]
 ```
 
-## Script for installing homebrew as dedicated user
+## Script for installing homebrew as a dedicated user
 
 This script is intended for installing homebrew as a dedicated user, as a workaround for issues that arise when homebrew is installed on multi-user systems. The script was inspired by the following article: https://www.codejam.info/2021/11/homebrew-multi-user.html.
 
