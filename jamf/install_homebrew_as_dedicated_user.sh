@@ -1,6 +1,17 @@
 #!/bin/bash
 
-set -u
+set -eu
+
+SCRIPT_NAME="install_homebrew_as_dedicated_user.sh"
+
+handle_error() {
+  local EXIT_CODE=$?
+  local LINE_NUMBER=$1
+  echo "An error occurred on line $LINE_NUMBER of $SCRIPT_NAME"
+  exit $EXIT_CODE
+}
+
+trap 'handle_error $LINENO' ERR
 
 VERSION=1
 
@@ -92,22 +103,14 @@ if should_install_command_line_tools && version_ge "${MACOS_VERSION}" "10.13"; t
     echo "Installing $CLT_LABEL"
     /usr/sbin/softwareupdate -i "$CLT_LABEL"
     /usr/bin/xcode-select --switch /Library/Developer/CommandLineTools
-    if (( $? == 0 )); then
-      echo "Command Line Tools installed successfully."
-    else
-      /bin/rm -f $CLT_PLACEHOLDER
-      echo "Failed to install or switch Command Line Tools. Exiting." >&2
-      exit 1
-    fi
   fi
   /bin/rm -f "$CLT_PLACEHOLDER"
-  echo "No Command Line Tools found for installation. Exiting." >&2
-  exit 1
 fi
 ### END adapted code
 
 HOMEBREW_USERNAME="homebrew"
 HOMEBREW_PATH="/opt/homebrew"
+HOMEBREW_BIN_PATHS="$HOMEBREW_PATH/bin:$HOMEBREW_PATH/sbin"
 HOMEBREW_SCRIPT="/usr/local/bin/brew"
 
 if [[ -d "$HOMEBREW_PATH" ]]; then
@@ -148,22 +151,16 @@ create_user_if_not_exists() {
 
 create_user_if_not_exists "$HOMEBREW_USERNAME"
 
-git clone https://github.com/Homebrew/brew $HOMEBREW_PATH
-chown "$HOMEBREW_USERNAME":admin $HOMEBREW_PATH
-chown -R "$HOMEBREW_USERNAME":admin $HOMEBREW_PATH
-chmod 700 $HOMEBREW_PATH/bin/brew
-su - "$HOMEBREW_USERNAME" <<EOF
-  "$HOMEBREW_PATH"/bin/brew update --force --quiet
-  # Not sure why this is necessary but it was mentioned here: https://docs.brew.sh/Installation
-  chmod -R go-w "$HOMEBREW_PATH/share/zsh"
-
-  # Add a version number to the installation, can be used for patches later
-  echo $VERSION >> "$HOMEBREW_PATH/_installer_version"
-
-  if [[ -n ~/"$HOMEBREW_USERS_SHELL_PROFILE_FILENAME" ]]; then
- 	  echo 'eval "$($HOMEBREW_PATH/bin/brew shellenv)"' >> ~/"$HOMEBREW_USERS_SHELL_PROFILE_FILENAME"
-  fi
-EOF
+git clone "https://github.com/Homebrew/brew" "$HOMEBREW_PATH"
+echo $VERSION >> "$HOMEBREW_PATH/_installer_version"
+chown "$HOMEBREW_USERNAME":admin "$HOMEBREW_PATH"
+chown -R "$HOMEBREW_USERNAME":admin "$HOMEBREW_PATH"
+chmod 700 "$HOMEBREW_PATH/bin/brew"
+su - "$HOMEBREW_USERNAME" -c "\"$HOMEBREW_PATH/bin/brew\" update --force --quiet"
+# Not sure why this is necessary but it was mentioned here: https://docs.brew.sh/Installation
+chmod -R go-w "$HOMEBREW_PATH/share/zsh"
+echo "export PATH=\"$TARGET_PATH:\$PATH\"" >> "/Users/$HOMEBREW_USERNAME/$HOMEBREW_USERS_SHELL_PROFILE_FILENAME"
+chown "$HOMEBREW_USERNAME" "/Users/$HOMEBREW_USERNAME/$HOMEBREW_USERS_SHELL_PROFILE_FILENAME"
 
 echo '#!/bin/bash
 set -u
@@ -176,7 +173,7 @@ fi
 HOMEBREW_PATH="'"$HOMEBREW_PATH"'"
 HOMEBREW_SCRIPT="'"$HOMEBREW_SCRIPT"'"
 
-TARGET_PATH="$HOMEBREW_PATH/bin:$HOMEBREW_PATH/sbin"
+HOMEBREW_BIN_PATHS="'"$HOMEBREW_BIN_PATHS"'"
 
 SHELL_NAME=$(basename "$SHELL")
 
