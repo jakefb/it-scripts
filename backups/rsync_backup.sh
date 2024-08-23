@@ -9,7 +9,7 @@ handle_exit() {
 }
 trap handle_exit EXIT
 caffeinate -w $$ &
-if [[ "$EUID" -ne 0 ]]; then
+if (( EUID != 0 )); then
   read -p $'\e[34mIf you are copying another users home folder, it is recommended to run this script with sudo. Would you like to continue without sudo? (y/n) \e[0m' RUN_WITHOUT_SUDO
   if [[ "$RUN_WITHOUT_SUDO" = "y" ]]; then
     echo "Continuing without sudo."
@@ -18,7 +18,7 @@ if [[ "$EUID" -ne 0 ]]; then
     exit 2
   fi
 fi
-if [ -z "$1" ] || [ -z "$2" ]; then
+if [[ -z "$1" || -z "$2" ]]; then
   echo "Usage: $0 [source path] [destination path] [optional: exclude file]"
   exit 2
 fi
