@@ -159,7 +159,7 @@ chmod 700 "$HOMEBREW_PATH/bin/brew"
 su - "$HOMEBREW_USERNAME" -c "\"$HOMEBREW_PATH/bin/brew\" update --force --quiet"
 # Not sure why this is necessary but it was mentioned here: https://docs.brew.sh/Installation
 chmod -R go-w "$HOMEBREW_PATH/share/zsh"
-echo "export PATH=\"$TARGET_PATH:\$PATH\"" >> "/Users/$HOMEBREW_USERNAME/$HOMEBREW_USERS_SHELL_PROFILE_FILENAME"
+echo "export PATH=\"$HOMEBREW_BIN_PATHS:\$PATH\"" >> "/Users/$HOMEBREW_USERNAME/$HOMEBREW_USERS_SHELL_PROFILE_FILENAME"
 chown "$HOMEBREW_USERNAME" "/Users/$HOMEBREW_USERNAME/$HOMEBREW_USERS_SHELL_PROFILE_FILENAME"
 
 echo '#!/bin/bash
@@ -184,7 +184,7 @@ if [[ "$SHELL_NAME" == "bash" || "$SHELL_NAME" == "zsh" ]]; then
     SHELL_PROFILE_PATH="$HOME/.zprofile"
   fi
 
-  if grep -q "export PATH=\"$TARGET_PATH:\$PATH\"" "$SHELL_PROFILE_PATH"; then
+  if grep -q "export PATH=\"$HOMEBREW_BIN_PATHS:\$PATH\"" "$SHELL_PROFILE_PATH"; then
     PATH_EXISTS=1
   else
     PATH_EXISTS=0
@@ -197,8 +197,8 @@ if [[ "$SHELL_NAME" == "bash" || "$SHELL_NAME" == "zsh" ]]; then
   fi
 
   if (( PATH_EXISTS == 0 )); then
-    echo "export PATH=\"$TARGET_PATH:\$PATH\"" >> "$SHELL_PROFILE_PATH"
-    echo "Added \`export PATH=\"$TARGET_PATH:\$PATH\"\` to $SHELL_PROFILE_PATH"
+    echo "export PATH=\"$HOMEBREW_BIN_PATHS:\$PATH\"" >> "$SHELL_PROFILE_PATH"
+    echo "Added \`export PATH=\"$HOMEBREW_BIN_PATHS:\$PATH\"\` to $SHELL_PROFILE_PATH"
   fi
 
   if (( ALIAS_EXISTS == 0 )); then
@@ -212,7 +212,7 @@ if [[ "$SHELL_NAME" == "bash" || "$SHELL_NAME" == "zsh" ]]; then
   fi
 else
   echo "Unsupported shell. Please manually add the following lines to your shell profile:"
-  echo "export PATH=\"$TARGET_PATH:\$PATH\""
+  echo "export PATH=\"$HOMEBREW_BIN_PATHS:\$PATH\""
   echo "alias brew=\"$HOMEBREW_SCRIPT\""
 fi
 
