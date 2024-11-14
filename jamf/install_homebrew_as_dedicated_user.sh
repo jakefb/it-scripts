@@ -217,4 +217,4 @@ else
 fi
 
 sudo -Hu homebrew "$HOMEBREW_PATH"/bin/brew "$@"' > "$HOMEBREW_SCRIPT"
-chmod +x /usr/local/bin/brew
+chmod +x "$HOMEBREW_SCRIPT"
