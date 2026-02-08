@@ -137,8 +137,8 @@ create_user_if_not_exists() {
     dscl . -create "/Users/$USER_TO_CREATE" UniqueID "$(dscl . -list /Users UniqueID | awk '{print $2}' | sort -n | tail -1 | awk '{print $1+1}')"
     dscl . -create "/Users/$USER_TO_CREATE" PrimaryGroupID 20
     dscl . -create "/Users/$USER_TO_CREATE" NFSHomeDirectory "/Users/$USER_TO_CREATE"
-    # Set the AuthenticationAuthority to an empty string, which disables the user from logging in
-    dscl . -create "/Users/$USER_TO_CREATE" AuthenticationAuthority ""
+    # Set the AuthenticationAuthority to ";DisabledUser;", which disables the user from logging in, this is documented here: https://developer.apple.com/documentation/opendirectory/kodattributetypeauthenticationauthority
+    dscl . -create "/Users/$USER_TO_CREATE" AuthenticationAuthority ";DisabledUser;"
     dscl . -create "/Users/$USER_TO_CREATE" IsHidden 1
     createhomedir -c -u "$USER_TO_CREATE" > /dev/null
     dseditgroup -o edit -a "$USER_TO_CREATE" -t user admin
